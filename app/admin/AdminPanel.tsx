@@ -13,13 +13,24 @@ import { VERIFICATION_TIER_LABELS } from "@/utils/constants";
 import { formatDate } from "@/utils/formatters";
 import type { Company, VerificationLevel } from "@/types/startup";
 import type { Profile } from "@/types/user";
+import type { ProfileUnlock } from "@/types/nda";
+
+export type UnlockWithDetails = ProfileUnlock & {
+  company: Company | null;
+  investor: { full_name: string | null; firm_name: string | null } | null;
+};
 
 interface AdminPanelProps {
   profiles: Profile[];
   companies: Company[];
+  unlocks: UnlockWithDetails[];
 }
 
-export function AdminPanel({ profiles, companies: initialCompanies }: AdminPanelProps) {
+export function AdminPanel({
+  profiles,
+  companies: initialCompanies,
+  unlocks,
+}: AdminPanelProps) {
   const [section, setSection] = useState<AdminSection>("overview");
   const [companies, setCompanies] = useState(initialCompanies);
   const [supabase] = useState(() => createClient());
@@ -148,16 +159,47 @@ export function AdminPanel({ profiles, companies: initialCompanies }: AdminPanel
 
           {section === "nda-audit" && (
             <SectionCard title="NDA Audit">
-              <div className="flex flex-col items-center gap-3 py-10 text-center">
-                <FiShield size={28} className="text-muted-foreground" aria-hidden="true" />
-                <p className="text-sm font-medium text-foreground">
-                  Audit trail isn&apos;t available yet
-                </p>
-                <p className="max-w-sm text-sm text-muted-foreground">
-                  The approval/rejection audit trail depends on the investor access-request
-                  flow, which is still being finalized.
-                </p>
-              </div>
+              <p className="-mt-2 text-xs text-muted-foreground">
+                A read-only log of gated-data unlocks. Unlocking is immediate and
+                self-service (Section 16) — there&apos;s no approval step for admins to act on
+                here.
+              </p>
+              {unlocks.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center">
+                  <FiShield size={28} className="text-muted-foreground" aria-hidden="true" />
+                  <p className="text-sm font-medium text-foreground">No unlocks yet</p>
+                  <p className="max-w-sm text-sm text-muted-foreground">
+                    Investor unlocks of gated startup data will appear here as they happen.
+                  </p>
+                </div>
+              ) : (
+                <ResponsiveTable>
+                  <thead>
+                    <tr className="border-b border-border text-xs text-muted-foreground uppercase">
+                      <th className="px-4 py-3 font-medium">Investor</th>
+                      <th className="px-4 py-3 font-medium">Startup</th>
+                      <th className="px-4 py-3 font-medium">Unlocked at</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unlocks.map((unlock) => (
+                      <tr key={unlock.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-3 text-foreground">
+                          {[unlock.investor?.full_name, unlock.investor?.firm_name]
+                            .filter(Boolean)
+                            .join(" · ") || "Unknown investor"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {unlock.company?.name ?? "Unknown startup"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDate(unlock.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </ResponsiveTable>
+              )}
             </SectionCard>
           )}
         </div>

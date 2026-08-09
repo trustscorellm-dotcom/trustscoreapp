@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { FiGrid, FiUser, FiLock, FiShield, FiRefreshCw } from "react-icons/fi";
 import { DashboardNav } from "@/components/DashboardNav";
 import { DashboardSidebar, type DashboardSectionConfig } from "@/components/DashboardSidebar";
@@ -202,6 +203,12 @@ export function FounderDashboard({
                     </button>
                   </div>
                 </div>
+                <Link
+                  href="/dashboard/analytics"
+                  className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
+                >
+                  View category breakdown →
+                </Link>
               </SectionCard>
 
               <SectionCard title="Profile completeness">

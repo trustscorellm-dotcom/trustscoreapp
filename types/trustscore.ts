@@ -77,7 +77,18 @@ export interface NdaData {
   updated_at: string | null;
 }
 
+// Additive companion output alongside score/confidence — Section 11.6 explicitly
+// allows this kind of extra, informational breakdown without altering the score
+// formula itself. Powers the analytics category chart.
+export interface CategoryBreakdown {
+  category: string;
+  label: string;
+  score: number;
+  weight: number;
+}
+
 export interface TrustScoreResult {
   score: number;
   confidence: number;
+  breakdown: CategoryBreakdown[];
 }

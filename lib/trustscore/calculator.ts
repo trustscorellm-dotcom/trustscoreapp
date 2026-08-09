@@ -1,5 +1,5 @@
 import type { Company } from "@/types/startup";
-import type { GatedData, NdaData, TrustScoreResult } from "@/types/trustscore";
+import type { CategoryBreakdown, GatedData, NdaData, TrustScoreResult } from "@/types/trustscore";
 
 // Confidence multipliers by data source — Section 11.1. Locked.
 export const CONFIDENCE = {
@@ -19,6 +19,17 @@ const CATEGORY_WEIGHTS = {
   INTELLECTUAL_PROPERTY: 0.1,
   INVESTOR_CONFIDENCE: 0.15,
 } as const;
+
+type CategoryKey = keyof typeof CATEGORY_WEIGHTS;
+
+const CATEGORY_LABELS: Record<CategoryKey, string> = {
+  COMPANY_FOUNDATION: "Company Foundation",
+  TEAM_LEADERSHIP: "Team & Leadership",
+  FUNDING_INVESTMENT: "Funding & Investment",
+  FINANCIAL_PERFORMANCE: "Financial Performance",
+  INTELLECTUAL_PROPERTY: "Intellectual Property",
+  INVESTOR_CONFIDENCE: "Investor Confidence",
+};
 
 // No single metric may contribute more than 15% of its category's total — Section 11.3/11.5.
 const METRIC_CONTRIBUTION_CAP_RATIO = 0.15;
@@ -162,14 +173,27 @@ export function calculateTrustScore(
   let weightedConfidence = 0;
   let totalPossibleWeight = 0;
 
+  // Per-category accumulators — purely additive bookkeeping alongside the
+  // existing totals above, which are computed exactly as before. Powers the
+  // breakdown output; does not feed back into score/confidence.
+  const categoryTotals: Record<CategoryKey, { score: number; confidence: number }> = {
+    COMPANY_FOUNDATION: { score: 0, confidence: 0 },
+    TEAM_LEADERSHIP: { score: 0, confidence: 0 },
+    FUNDING_INVESTMENT: { score: 0, confidence: 0 },
+    FINANCIAL_PERFORMANCE: { score: 0, confidence: 0 },
+    INTELLECTUAL_PROPERTY: { score: 0, confidence: 0 },
+    INVESTOR_CONFIDENCE: { score: 0, confidence: 0 },
+  };
+
   function scoreMetric(
     rawValue: unknown,
     normalizeFn: (v: unknown) => number,
     weight: number,
     confidence: number,
     verifiedAt: string | null,
-    categoryWeight: number
+    category: CategoryKey
   ) {
+    const categoryWeight = CATEGORY_WEIGHTS[category];
     totalPossibleWeight += weight;
     if (isEffectivelyMissing(rawValue)) return;
 
@@ -187,19 +211,22 @@ export function calculateTrustScore(
 
     weightedScore += normalized * scoreWeight;
     weightedConfidence += effectiveWeight;
+
+    categoryTotals[category].score += normalized * scoreWeight;
+    categoryTotals[category].confidence += effectiveWeight;
   }
 
   // 1. Company Foundation (20%)
-  scoreMetric(company.age, normalizeAge, 0.05, CONFIDENCE.PUBLIC, null, CATEGORY_WEIGHTS.COMPANY_FOUNDATION);
-  scoreMetric(company.city, normalizeCity, 0.05, CONFIDENCE.PUBLIC, null, CATEGORY_WEIGHTS.COMPANY_FOUNDATION);
-  scoreMetric(company.sector, normalizeSector, 0.05, CONFIDENCE.PUBLIC, null, CATEGORY_WEIGHTS.COMPANY_FOUNDATION);
+  scoreMetric(company.age, normalizeAge, 0.05, CONFIDENCE.PUBLIC, null, "COMPANY_FOUNDATION");
+  scoreMetric(company.city, normalizeCity, 0.05, CONFIDENCE.PUBLIC, null, "COMPANY_FOUNDATION");
+  scoreMetric(company.sector, normalizeSector, 0.05, CONFIDENCE.PUBLIC, null, "COMPANY_FOUNDATION");
   scoreMetric(
     company.description,
     normalizeDescriptionQuality,
     0.05,
     CONFIDENCE.PUBLIC,
     null,
-    CATEGORY_WEIGHTS.COMPANY_FOUNDATION
+    "COMPANY_FOUNDATION"
   );
 
   // 2. Team & Leadership (15%)
@@ -209,7 +236,7 @@ export function calculateTrustScore(
     0.07,
     CONFIDENCE.GATED,
     gated?.updated_at ?? null,
-    CATEGORY_WEIGHTS.TEAM_LEADERSHIP
+    "TEAM_LEADERSHIP"
   );
   scoreMetric(
     [company.incubator_accelerator, gated?.accelerator ?? null],
@@ -217,7 +244,7 @@ export function calculateTrustScore(
     0.08,
     CONFIDENCE.GATED,
     null,
-    CATEGORY_WEIGHTS.TEAM_LEADERSHIP
+    "TEAM_LEADERSHIP"
   );
 
   // 3. Funding & Investment (20%)
@@ -227,7 +254,7 @@ export function calculateTrustScore(
     0.1,
     CONFIDENCE.NDA,
     nda?.updated_at ?? null,
-    CATEGORY_WEIGHTS.FUNDING_INVESTMENT
+    "FUNDING_INVESTMENT"
   );
   scoreMetric(
     nda?.latest_round?.amount ?? null,
@@ -235,7 +262,7 @@ export function calculateTrustScore(
     0.05,
     CONFIDENCE.NDA,
     nda?.updated_at ?? null,
-    CATEGORY_WEIGHTS.FUNDING_INVESTMENT
+    "FUNDING_INVESTMENT"
   );
   scoreMetric(
     nda?.total_loans ?? null,
@@ -243,7 +270,7 @@ export function calculateTrustScore(
     0.05,
     CONFIDENCE.NDA,
     nda?.updated_at ?? null,
-    CATEGORY_WEIGHTS.FUNDING_INVESTMENT
+    "FUNDING_INVESTMENT"
   );
 
   // 4. Financial Performance (20%)
@@ -253,7 +280,7 @@ export function calculateTrustScore(
     0.1,
     CONFIDENCE.GATED_VERIFIED,
     gated?.updated_at ?? null,
-    CATEGORY_WEIGHTS.FINANCIAL_PERFORMANCE
+    "FINANCIAL_PERFORMANCE"
   );
   scoreMetric(
     gated?.profit_after_tax ?? null,
@@ -261,7 +288,7 @@ export function calculateTrustScore(
     0.05,
     CONFIDENCE.GATED_VERIFIED,
     gated?.updated_at ?? null,
-    CATEGORY_WEIGHTS.FINANCIAL_PERFORMANCE
+    "FINANCIAL_PERFORMANCE"
   );
   scoreMetric(
     nda?.assets ?? null,
@@ -269,7 +296,7 @@ export function calculateTrustScore(
     0.05,
     CONFIDENCE.NDA,
     nda?.updated_at ?? null,
-    CATEGORY_WEIGHTS.FINANCIAL_PERFORMANCE
+    "FINANCIAL_PERFORMANCE"
   );
 
   // 5. Intellectual Property (10%)
@@ -279,7 +306,7 @@ export function calculateTrustScore(
     0.06,
     CONFIDENCE.NDA,
     nda?.updated_at ?? null,
-    CATEGORY_WEIGHTS.INTELLECTUAL_PROPERTY
+    "INTELLECTUAL_PROPERTY"
   );
   scoreMetric(
     nda?.trademark_count ?? null,
@@ -287,7 +314,7 @@ export function calculateTrustScore(
     0.04,
     CONFIDENCE.NDA,
     nda?.updated_at ?? null,
-    CATEGORY_WEIGHTS.INTELLECTUAL_PROPERTY
+    "INTELLECTUAL_PROPERTY"
   );
 
   // 6. Investor Confidence (15%)
@@ -297,7 +324,7 @@ export function calculateTrustScore(
     0.1,
     CONFIDENCE.GATED,
     gated?.updated_at ?? null,
-    CATEGORY_WEIGHTS.INVESTOR_CONFIDENCE
+    "INVESTOR_CONFIDENCE"
   );
   scoreMetric(
     [gated?.angel_investors ?? null, gated?.vc_rounds ?? null],
@@ -305,7 +332,7 @@ export function calculateTrustScore(
     0.05,
     CONFIDENCE.GATED,
     gated?.updated_at ?? null,
-    CATEGORY_WEIGHTS.INVESTOR_CONFIDENCE
+    "INVESTOR_CONFIDENCE"
   );
 
   const score =
@@ -316,5 +343,19 @@ export function calculateTrustScore(
       ? clamp((weightedConfidence / totalPossibleWeight) * 100, 0, 100)
       : 0;
 
-  return { score, confidence };
+  const breakdown: CategoryBreakdown[] = (
+    Object.keys(CATEGORY_WEIGHTS) as CategoryKey[]
+  ).map((key) => {
+    const totals = categoryTotals[key];
+    const categoryScore =
+      totals.confidence > 0 ? clamp((totals.score / totals.confidence) * 100, 0, 100) : 0;
+    return {
+      category: key,
+      label: CATEGORY_LABELS[key],
+      score: categoryScore,
+      weight: CATEGORY_WEIGHTS[key] * 100,
+    };
+  });
+
+  return { score, confidence, breakdown };
 }

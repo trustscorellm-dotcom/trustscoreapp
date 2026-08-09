@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
-import { FiInbox } from "react-icons/fi";
 import { StartupCard } from "@/components/StartupCard";
 import { SearchFilters } from "@/components/SearchFilters";
 import { ResponsiveGrid } from "@/components/ResponsiveGrid";
+import { LazyImage } from "@/components/LazyImage";
 import { useSearch } from "@/hooks/useSearch";
 import type { Company } from "@/types/startup";
 
@@ -41,7 +41,13 @@ export function DirectoryClient({ companies }: DirectoryClientProps) {
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card py-16 text-center">
-          <FiInbox size={28} className="text-muted-foreground" aria-hidden="true" />
+          <LazyImage
+            src="/images/empty-state-directory.png"
+            alt="No startups found"
+            width={160}
+            height={120}
+            className="rounded-lg"
+          />
           <p className="text-sm font-medium text-foreground">
             {companies.length === 0
               ? "No startups on the platform yet"

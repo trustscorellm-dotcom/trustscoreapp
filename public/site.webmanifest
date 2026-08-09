@@ -1,0 +1,16 @@
+{
+  "name": "TrustScore AI",
+  "short_name": "TrustScore",
+  "description": "Structured, explainable trust signals for startups and the investors who evaluate them.",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#0A2E4D",
+  "background_color": "#FCFDFF",
+  "display": "standalone",
+  "start_url": "/"
+}

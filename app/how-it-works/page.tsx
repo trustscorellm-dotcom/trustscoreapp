@@ -8,6 +8,7 @@ import {
   FiUserCheck,
 } from "react-icons/fi";
 import { ResponsiveGrid } from "@/components/ResponsiveGrid";
+import { LazyImage } from "@/components/LazyImage";
 
 export const metadata: Metadata = {
   title: "How It Works",
@@ -130,6 +131,16 @@ export default function HowItWorksPage() {
             data&rdquo; instead of a number that looks more authoritative than it is.
           </p>
         </div>
+      </div>
+
+      <div className="mt-16">
+        <LazyImage
+          src="/images/score-breakdown-placeholder.png"
+          alt="Example TrustScore category breakdown"
+          width={1040}
+          height={360}
+          className="w-full rounded-xl border border-border object-cover"
+        />
       </div>
     </div>
   );

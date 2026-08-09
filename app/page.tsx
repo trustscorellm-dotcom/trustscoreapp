@@ -241,6 +241,28 @@ export default function HomePage() {
             Founders build a structured trust profile in minutes. Investors browse
             explainable scores, not raw pitch decks.
           </p>
+          <div className="mx-auto mt-10 grid max-w-2xl gap-6 text-left sm:grid-cols-2">
+            <div className="flex flex-col gap-3">
+              <LazyImage
+                src="/images/founder-flow-placeholder.png"
+                alt="Founder onboarding flow"
+                width={320}
+                height={200}
+                className="w-full rounded-lg border border-border object-cover"
+              />
+              <p className="text-sm font-medium text-foreground">For founders</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <LazyImage
+                src="/images/investor-flow-placeholder.png"
+                alt="Investor matching flow"
+                width={320}
+                height={200}
+                className="w-full rounded-lg border border-border object-cover"
+              />
+              <p className="text-sm font-medium text-foreground">For investors</p>
+            </div>
+          </div>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/register"

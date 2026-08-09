@@ -20,13 +20,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const TAGLINE =
+  "TrustScore AI converts fragmented startup evidence into structured, explainable, investor-ready trust signals — helping founders build credibility and helping investors reduce due-diligence friction.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: {
     default: "TrustScore AI — Startup Validation & Fundraising Readiness",
     template: "%s | TrustScore AI",
   },
-  description:
-    "TrustScore AI converts fragmented startup evidence into structured, explainable, investor-ready trust signals — helping founders build credibility and helping investors reduce due-diligence friction.",
+  description: TAGLINE,
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: "/images/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "TrustScore AI",
+    description: TAGLINE,
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TrustScore AI",
+    description: TAGLINE,
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

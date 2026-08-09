@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FiGlobe, FiMapPin, FiCalendar } from "react-icons/fi";
+import { FiGlobe, FiMapPin, FiCalendar, FiUsers, FiTrendingUp } from "react-icons/fi";
 import { createClient } from "@/lib/supabase/server";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { LazyImage } from "@/components/LazyImage";
-import { formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 import type { Company } from "@/types/startup";
+import type { GatedData } from "@/types/trustscore";
 
 interface StartupPageProps {
   params: Promise<{ id: string }>;
@@ -38,6 +40,33 @@ export default async function StartupPage({ params }: StartupPageProps) {
   if (!company) notFound();
 
   const startup = company as Company;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isOwner = user?.id === startup.owner_id;
+  let unlocked = isOwner;
+  let gated: GatedData | null = null;
+
+  if (user && !isOwner) {
+    const { data: unlock } = await supabase
+      .from("profile_unlocks")
+      .select("id")
+      .eq("investor_id", user.id)
+      .eq("startup_id", id)
+      .maybeSingle();
+    unlocked = Boolean(unlock);
+  }
+
+  if (unlocked) {
+    const { data } = await supabase
+      .from("startup_gated_data")
+      .select("*")
+      .eq("startup_id", id)
+      .maybeSingle();
+    gated = data as GatedData | null;
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-16 sm:px-6 lg:py-24">
@@ -95,15 +124,71 @@ export default async function StartupPage({ params }: StartupPageProps) {
             <p className="mt-1 text-sm text-muted-foreground">Score not public</p>
           )}
         </div>
-        <button
-          type="button"
-          disabled
-          title="Investor access requests are coming soon"
-          className="rounded-md border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground opacity-70"
-        >
-          View more (coming soon)
-        </button>
+        {!isOwner && !unlocked && (
+          <Link
+            href={`/nda/${id}`}
+            className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            View more
+          </Link>
+        )}
       </div>
+
+      {unlocked && (
+        <div className="mt-6 rounded-xl border border-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">Gated Data</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {isOwner
+              ? "Only visible to you and investors you've unlocked this for."
+              : "Unlocked — visible only to you among investors."}
+          </p>
+
+          {gated ? (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <InfoRow
+                icon={FiUsers}
+                label="Founding team"
+                value={
+                  gated.founding_team?.length
+                    ? gated.founding_team.map((m) => m.name).join(", ")
+                    : "—"
+                }
+              />
+              <InfoRow
+                icon={FiUsers}
+                label="Number of investors"
+                value={
+                  gated.number_of_investors !== null ? String(gated.number_of_investors) : "—"
+                }
+              />
+              <InfoRow
+                icon={FiTrendingUp}
+                label="Revenue"
+                value={formatCurrency(gated.revenue, gated.revenue_currency ?? "USD")}
+              />
+              <InfoRow
+                icon={FiTrendingUp}
+                label="Profit after tax"
+                value={formatCurrency(gated.profit_after_tax, gated.revenue_currency ?? "USD")}
+              />
+              <InfoRow
+                icon={FiTrendingUp}
+                label="Valuation"
+                value={formatCurrency(gated.valuation, gated.revenue_currency ?? "USD")}
+              />
+              <InfoRow
+                icon={FiTrendingUp}
+                label="Runway"
+                value={gated.runway_months !== null ? `${gated.runway_months} months` : "—"}
+              />
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">
+              This startup hasn&apos;t submitted gated-tier data yet.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

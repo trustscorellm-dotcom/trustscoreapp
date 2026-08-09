@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   FiGrid,
   FiUser,
   FiBriefcase,
-  FiInbox,
+  FiUnlock,
   FiSearch,
   FiX,
 } from "react-icons/fi";
@@ -17,26 +18,32 @@ import { LazyImage } from "@/components/LazyImage";
 import { useOptimisticSave } from "@/hooks/useOptimisticSave";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/ui/toast";
+import { formatDate } from "@/utils/formatters";
 import type { Company } from "@/types/startup";
 import type { InvestorProfile, PortfolioEntry } from "@/types/investor";
+import type { ProfileUnlock } from "@/types/nda";
 
-type InvestorSection = "overview" | "profile" | "portfolio" | "requests";
+type InvestorSection = "overview" | "profile" | "portfolio" | "unlocks";
 
 const INVESTOR_SECTIONS: DashboardSectionConfig<InvestorSection>[] = [
   { id: "overview", label: "Overview", icon: FiGrid },
   { id: "profile", label: "Profile", icon: FiUser },
   { id: "portfolio", label: "Portfolio", icon: FiBriefcase },
-  { id: "requests", label: "Access Requests", icon: FiInbox },
+  { id: "unlocks", label: "Unlocked Startups", icon: FiUnlock },
 ];
+
+type UnlockWithCompany = ProfileUnlock & { company: Company | null };
 
 interface InvestorDashboardProps {
   profile: InvestorProfile;
   portfolio: PortfolioEntry[];
+  unlocks: UnlockWithCompany[];
 }
 
 export function InvestorDashboard({
   profile: initialProfile,
   portfolio: initialPortfolio,
+  unlocks,
 }: InvestorDashboardProps) {
   const [section, setSection] = useState<InvestorSection>("overview");
   const [profile, setProfile] = useState<InvestorProfile>(initialProfile);
@@ -181,18 +188,59 @@ export function InvestorDashboard({
             />
           )}
 
-          {section === "requests" && (
-            <SectionCard title="Access Requests">
-              <div className="flex flex-col items-center gap-3 py-10 text-center">
-                <FiInbox size={28} className="text-muted-foreground" aria-hidden="true" />
-                <p className="text-sm font-medium text-foreground">
-                  Access requests aren&apos;t available yet
-                </p>
-                <p className="max-w-sm text-sm text-muted-foreground">
-                  Requesting gated or NDA-tier data from founders is still being finalized.
-                  Check back soon.
-                </p>
-              </div>
+          {section === "unlocks" && (
+            <SectionCard title="Unlocked Startups">
+              <p className="-mt-2 text-xs text-muted-foreground">
+                Startups whose gated data you&apos;ve unlocked. Unlocking is immediate — there&apos;s
+                no approval step to wait on.
+              </p>
+              {unlocks.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center">
+                  <FiUnlock size={28} className="text-muted-foreground" aria-hidden="true" />
+                  <p className="text-sm font-medium text-foreground">
+                    You haven&apos;t unlocked any startups yet
+                  </p>
+                  <p className="max-w-sm text-sm text-muted-foreground">
+                    Visit a startup&apos;s profile and click &ldquo;View more&rdquo; to unlock its
+                    gated data.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {unlocks.map((unlock) => (
+                    <div
+                      key={unlock.id}
+                      className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <LazyImage
+                          src={unlock.company?.logo_url ?? "/images/logo.png"}
+                          alt={`${unlock.company?.name ?? "Startup"} logo`}
+                          width={32}
+                          height={32}
+                          className="h-8 w-8 rounded-md object-cover"
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {unlock.company?.name ?? "Unknown startup"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Unlocked {formatDate(unlock.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      {unlock.company && (
+                        <Link
+                          href={`/startup/${unlock.company.id}`}
+                          className="text-sm font-medium text-primary hover:underline"
+                        >
+                          View
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </SectionCard>
           )}
         </div>

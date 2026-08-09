@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { FiFileText } from "react-icons/fi";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NDASigner } from "@/components/NDASigner";
+import type { Company } from "@/types/startup";
 
 export const metadata: Metadata = {
   title: "NDA Access",
@@ -15,32 +15,29 @@ interface NdaPageProps {
 export default async function NdaPage({ params }: NdaPageProps) {
   const { id } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(`/auth?redirectTo=${encodeURIComponent(`/nda/${id}`)}`);
+
   const { data: company } = await supabase
     .from("companies")
-    .select("name")
+    .select("*")
     .eq("id", id)
-    .single();
-
+    .maybeSingle();
   if (!company) notFound();
 
+  const { data: existingUnlock } = await supabase
+    .from("profile_unlocks")
+    .select("id")
+    .eq("investor_id", user.id)
+    .eq("startup_id", id)
+    .maybeSingle();
+
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 px-4 py-20 text-center sm:px-6">
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <FiFileText size={22} aria-hidden="true" />
-      </span>
-      <h1 className="text-2xl font-semibold text-foreground">
-        NDA access for {company.name}
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        NDA-gated access requests aren&apos;t available yet — this flow is still being
-        finalized. Check back soon.
-      </p>
-      <Link
-        href={`/startup/${id}`}
-        className="mt-2 text-sm font-medium text-primary hover:underline"
-      >
-        Back to {company.name}&apos;s profile
-      </Link>
+    <div className="mx-auto w-full max-w-lg px-4 py-16 sm:px-6">
+      <NDASigner company={company as Company} alreadyUnlocked={Boolean(existingUnlock)} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { InvestorDashboard } from "./InvestorDashboard";
 import type { Company } from "@/types/startup";
 import type { GatedData, NdaData } from "@/types/trustscore";
 import type { InvestorProfile, PortfolioEntry } from "@/types/investor";
+import type { ProfileUnlock } from "@/types/nda";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -65,15 +66,20 @@ export default async function DashboardPage() {
       );
     }
 
-    const { data: portfolio } = await supabase
-      .from("portfolio")
-      .select("*, company:companies(*)")
-      .eq("investor_id", user.id);
+    const [{ data: portfolio }, { data: unlocks }] = await Promise.all([
+      supabase.from("portfolio").select("*, company:companies(*)").eq("investor_id", user.id),
+      supabase
+        .from("profile_unlocks")
+        .select("*, company:companies(*)")
+        .eq("investor_id", user.id)
+        .order("created_at", { ascending: false }),
+    ]);
 
     return (
       <InvestorDashboard
         profile={investorProfile as InvestorProfile}
         portfolio={(portfolio as PortfolioEntry[] | null) ?? []}
+        unlocks={(unlocks as (ProfileUnlock & { company: Company | null })[] | null) ?? []}
       />
     );
   }

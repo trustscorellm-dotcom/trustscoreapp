@@ -1,29 +1,31 @@
 "use client";
 
-import { FiGrid, FiUser, FiLock, FiShield } from "react-icons/fi";
+import type { IconType } from "react-icons";
 import { cn } from "@/lib/utils";
 
-export type DashboardSection = "overview" | "profile" | "gated" | "nda";
-
-const SECTIONS: { id: DashboardSection; label: string; icon: typeof FiGrid }[] = [
-  { id: "overview", label: "Overview", icon: FiGrid },
-  { id: "profile", label: "Public Profile", icon: FiUser },
-  { id: "gated", label: "Gated Data", icon: FiLock },
-  { id: "nda", label: "NDA Data", icon: FiShield },
-];
-
-interface DashboardSidebarProps {
-  active: DashboardSection;
-  onChange: (section: DashboardSection) => void;
+export interface DashboardSectionConfig<T extends string> {
+  id: T;
+  label: string;
+  icon: IconType;
 }
 
-export function DashboardSidebar({ active, onChange }: DashboardSidebarProps) {
+interface DashboardSidebarProps<T extends string> {
+  sections: DashboardSectionConfig<T>[];
+  active: T;
+  onChange: (section: T) => void;
+}
+
+export function DashboardSidebar<T extends string>({
+  sections,
+  active,
+  onChange,
+}: DashboardSidebarProps<T>) {
   return (
     <nav
       aria-label="Dashboard sections"
       className="flex gap-2 overflow-x-auto pb-2 lg:w-56 lg:flex-col lg:overflow-visible lg:pb-0"
     >
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <button
           key={section.id}
           type="button"

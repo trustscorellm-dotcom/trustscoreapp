@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { FiRefreshCw } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiGrid, FiUser, FiLock, FiShield, FiRefreshCw } from "react-icons/fi";
 import { DashboardNav } from "@/components/DashboardNav";
-import { DashboardSidebar, type DashboardSection } from "@/components/DashboardSidebar";
+import { DashboardSidebar, type DashboardSectionConfig } from "@/components/DashboardSidebar";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { TagListInput } from "@/components/TagListInput";
+import { Field, SectionCard, SaveButton } from "@/components/DashboardFormElements";
 import { useOptimisticSave } from "@/hooks/useOptimisticSave";
 import { toast } from "@/components/ui/toast";
 import { MIN_DISPLAYABLE_CONFIDENCE } from "@/lib/trustscore/calculator";
@@ -60,69 +61,21 @@ function emptyNda(startupId: string): NdaData {
   };
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-  textarea = false,
-}: {
-  label: string;
-  value: string | number | null;
-  onChange: (value: string) => void;
-  type?: string;
-  textarea?: boolean;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="font-medium text-foreground">{label}</span>
-      {textarea ? (
-        <textarea
-          value={value ?? ""}
-          onChange={(event) => onChange(event.target.value)}
-          rows={4}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-        />
-      ) : (
-        <input
-          type={type}
-          value={value ?? ""}
-          onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-        />
-      )}
-    </label>
-  );
-}
+type FounderSection = "overview" | "profile" | "gated" | "nda";
 
-function SectionCard({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-      <div className="mt-6 flex flex-col gap-5">{children}</div>
-    </div>
-  );
-}
-
-function SaveButton({ saving, onClick }: { saving: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={saving}
-      className="self-start rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-    >
-      {saving ? "Saving..." : "Save changes"}
-    </button>
-  );
-}
+const FOUNDER_SECTIONS: DashboardSectionConfig<FounderSection>[] = [
+  { id: "overview", label: "Overview", icon: FiGrid },
+  { id: "profile", label: "Public Profile", icon: FiUser },
+  { id: "gated", label: "Gated Data", icon: FiLock },
+  { id: "nda", label: "NDA Data", icon: FiShield },
+];
 
 export function FounderDashboard({
   company: initialCompany,
   gated: initialGated,
   nda: initialNda,
 }: FounderDashboardProps) {
-  const [section, setSection] = useState<DashboardSection>("overview");
+  const [section, setSection] = useState<FounderSection>("overview");
   const [company, setCompany] = useState<Company>(initialCompany);
   const [gated, setGated] = useState<GatedData>(initialGated ?? emptyGated(initialCompany.id));
   const [nda, setNda] = useState<NdaData>(initialNda ?? emptyNda(initialCompany.id));
@@ -205,7 +158,7 @@ export function FounderDashboard({
       <DashboardNav title="Founder Dashboard" />
 
       <div className="mt-8 flex flex-col gap-8 lg:flex-row">
-        <DashboardSidebar active={section} onChange={setSection} />
+        <DashboardSidebar sections={FOUNDER_SECTIONS} active={section} onChange={setSection} />
 
         <div className="flex-1">
           {section === "overview" && (

@@ -6,6 +6,7 @@ import { FiShield } from "react-icons/fi";
 import { AdminNav } from "@/components/AdminNav";
 import { AdminSidebar, type AdminSection } from "@/components/AdminSidebar";
 import { SectionCard } from "@/components/DashboardFormElements";
+import { ResponsiveGrid } from "@/components/ResponsiveGrid";
 import { ResponsiveTable } from "@/components/ResponsiveTable";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/ui/toast";
@@ -74,12 +75,12 @@ export function AdminPanel({
 
         <div className="flex-1">
           {section === "overview" && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <ResponsiveGrid columns={{ base: 1, sm: 2, lg: 4 }}>
               <StatCard label="Founders" value={founderCount} />
               <StatCard label="Investors" value={investorCount} />
               <StatCard label="Companies" value={companies.length} />
               <StatCard label="Avg TrustScore" value={avgScore ?? "—"} />
-            </div>
+            </ResponsiveGrid>
           )}
 
           {section === "users" && (

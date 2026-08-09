@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { FiInbox } from "react-icons/fi";
 import { StartupCard } from "@/components/StartupCard";
 import { SearchFilters } from "@/components/SearchFilters";
+import { ResponsiveGrid } from "@/components/ResponsiveGrid";
 import { useSearch } from "@/hooks/useSearch";
 import type { Company } from "@/types/startup";
 
@@ -53,11 +54,11 @@ export function DirectoryClient({ companies }: DirectoryClientProps) {
           </p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ResponsiveGrid>
           {filtered.map((company) => (
             <StartupCard key={company.id} company={company} />
           ))}
-        </div>
+        </ResponsiveGrid>
       )}
     </div>
   );

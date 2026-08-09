@@ -7,6 +7,7 @@ import {
   FiAward,
   FiUserCheck,
 } from "react-icons/fi";
+import { ResponsiveGrid } from "@/components/ResponsiveGrid";
 
 export const metadata: Metadata = {
   title: "How It Works",
@@ -76,7 +77,7 @@ export default function HowItWorksPage() {
 
       <div className="mt-16">
         <h2 className="text-2xl font-semibold text-foreground">Scoring categories</h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ResponsiveGrid className="mt-8">
           {CATEGORIES.map((category) => (
             <div key={category.title} className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-center justify-between">
@@ -93,7 +94,7 @@ export default function HowItWorksPage() {
               <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
             </div>
           ))}
-        </div>
+        </ResponsiveGrid>
       </div>
 
       <div className="mt-16 grid gap-10 lg:grid-cols-2">

@@ -46,75 +46,84 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Brand palette — CLAUDE.md Section 10, exact values. Gold tokens exist for the
+     three permitted usages only (investor-backed badge, top-tier score ring, one
+     CTA accent line) — do not wire them into generic component tokens above. */
+  --color-brand-primary-start: var(--brand-primary-start);
+  --color-brand-primary-mid: var(--brand-primary-mid);
+  --color-brand-primary-end: var(--brand-primary-end);
+  --color-brand-success-start: var(--brand-success-start);
+  --color-brand-success-mid: var(--brand-success-mid);
+  --color-brand-success-end: var(--brand-success-end);
+  --color-brand-gold-start: var(--brand-gold-start);
+  --color-brand-gold-end: var(--brand-gold-end);
+  --color-brand-chart-blue-1: var(--brand-chart-blue-1);
+  --color-brand-chart-blue-2: var(--brand-chart-blue-2);
+  --color-brand-chart-blue-3: var(--brand-chart-blue-3);
+  --color-brand-network-line: var(--brand-network-line);
+  --color-brand-network-dot: var(--brand-network-dot);
+  --color-brand-success-solid: var(--brand-success-solid);
+  --color-brand-success-solid-dark: var(--brand-success-solid-dark);
+  --color-brand-error: var(--brand-error);
+  --color-brand-error-dark: var(--brand-error-dark);
+  --color-brand-warning: var(--brand-warning);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* shadcn semantic tokens, mapped to the Section 10 palette */
+  --background: #FCFDFF;
+  --foreground: #0A0F16;
+  --card: #F7F9FC;
+  --card-foreground: #0A0F16;
+  --popover: #FCFDFF;
+  --popover-foreground: #0A0F16;
+  --primary: #155E85;
+  --primary-foreground: #FCFDFF;
+  --secondary: #F7F9FC;
+  --secondary-foreground: #0A0F16;
+  --muted: #F7F9FC;
+  --muted-foreground: #8B98A9;
+  --accent: #F7F9FC;
+  --accent-foreground: #0A0F16;
+  --destructive: #E5484D;
+  --border: #E1E7ED;
+  --input: #E1E7ED;
+  --ring: #2E93B8;
+  --chart-1: #12395A;
+  --chart-2: #1E6488;
+  --chart-3: #3390B6;
+  --chart-4: #12395A;
+  --chart-5: #1E6488;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --sidebar: #FCFDFF;
+  --sidebar-foreground: #0A0F16;
+  --sidebar-primary: #155E85;
+  --sidebar-primary-foreground: #FCFDFF;
+  --sidebar-accent: #F7F9FC;
+  --sidebar-accent-foreground: #0A0F16;
+  --sidebar-border: #E1E7ED;
+  --sidebar-ring: #2E93B8;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Brand palette — raw values, Section 10 */
+  --brand-primary-start: #0A2E4D;
+  --brand-primary-mid: #155E85;
+  --brand-primary-end: #2E93B8;
+  --brand-success-start: #0F6E52;
+  --brand-success-mid: #1E9C74;
+  --brand-success-end: #4FC79A;
+  --brand-gold-start: #B8873D;
+  --brand-gold-end: #D9A44E;
+  --brand-chart-blue-1: #12395A;
+  --brand-chart-blue-2: #1E6488;
+  --brand-chart-blue-3: #3390B6;
+  --brand-network-line: #C7D6E0;
+  --brand-network-dot: #9FB7C4;
+  --brand-success-solid: #0F9D6C;
+  --brand-success-solid-dark: #0B7A54;
+  --brand-error: #E5484D;
+  --brand-error-dark: #C93A3E;
+  --brand-warning: #C88A17;
 }
 
 @layer base {

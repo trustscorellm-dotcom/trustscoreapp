@@ -8,6 +8,7 @@ Accomplishments
 What Was Learned
 What's Next
 Tech Stack
+Setup & Installation (Added)
 Database Schema (Supabase)
 Color Palette (Strict Enforcement)
 TrustScore Calculation (Critical)
@@ -20,6 +21,7 @@ Investor Profile Data Model
 Founder Input Fields
 Data Sync Requirement: Founder Edits → Optimistic UI → Supabase → Realtime
 Authentication
+Component Library Clarification: Radix UI, Not Base UI (Added)
 
 1. Project Overview
 Inspiration
@@ -107,6 +109,42 @@ Admin panel: user management, review queue, NDA audit.
 TrustScore calculation based on multiple data points across public, gated, and NDA-protected tiers.
 Light-mode only UI with a specific brand color palette (navy-to-teal shield, forest-to-mint checkmark gradient).
 Integration with Supabase for data storage and authentication.
+
+8A. Setup & Installation (Added)
+> This subsection did not exist in the original source brief. It is added here purely for onboarding convenience, based on what was actually run to stand up this project. It does not change any tech stack decision, weighting, or design rule above — see Section 8 for the authoritative stack list.
+
+Minimum requirements:
+- Node.js 20.9 or later (required by Next.js 16).
+
+Scaffold (run inside the project root, after moving any pre-existing files like public/images/, .env.local, and claude.md out of the way temporarily if the directory isn't empty):
+```
+npx create-next-app@latest .
+```
+Recommended prompt answers: TypeScript — Yes, Tailwind CSS — Yes, ESLint — Yes, App Router — Yes, src/ directory — No (routes live in app/ at root per Section 13), import alias — @/*.
+
+Install the remaining stack named in Section 8:
+```
+npm install @supabase/supabase-js @supabase/ssr
+npm install react-icons
+npm install framer-motion
+```
+
+Initialize shadcn/ui explicitly on Radix UI (see Section 21 — as of the current shadcn CLI, Base UI is the new default, and must be overridden):
+```
+npx shadcn init -b radix
+```
+When prompted for a visual preset (Vega, Nova, Maia, Lyra, Mira, Luma, Sera, Rhea, Custom), any is acceptable as a starting point since all components get restyled to the project's exact color tokens per Section 12 — Vega (the classic/least-opinionated shadcn look) is the easiest base to restyle from if no preference exists.
+
+Environment variables — create .env.local (never commit this file):
+```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+Verify the app boots:
+```
+npm run dev
+```
 
 9. Database Schema (Supabase)
 Core Tables
@@ -345,6 +383,7 @@ Mobile-first, fully responsive across breakpoints.
 Accessibility
 Semantic HTML throughout, proper ARIA labels on all interactive elements — shadcn/Radix components handle much of this out of the box (focus trapping, keyboard nav, aria-* attributes), but this must still be verified per-component, not assumed.
 
+Note: see Section 21 for a critical clarification — the shadcn CLI now defaults to Base UI instead of Radix UI as of a mid-2026 update. This row's instruction to use Radix UI is unchanged and still authoritative; Section 21 exists only to explain how to make the current CLI actually do that.
 
 13. File & Folder Map
 13.1 app/ — Pages & API Routes
@@ -655,6 +694,7 @@ No TrustScoreGauge component. Remove components/TrustScoreGauge.tsx entirely. Re
 Icons must be SVG-based, via the React Icons library — no emojis anywhere in the UI, including placeholder/empty states, toasts, and admin views.
 Animations via Framer Motion only, kept subtle and purposeful — hover states, scroll reveals, page transitions. No animation should exist that doesn't clarify state or direct attention; avoid decorative motion for its own sake.
 Component library: shadcn/ui is approved for use, built on Radix UI primitives (the project already has @radix-ui/react-slot and @radix-ui/react-tooltip installed, so this is a natural fit, not a new dependency direction). Pull components via the shadcn CLI into components/ui/, then restyle them to match the project's exact color tokens — never leave them in shadcn's default theme. If any existing custom component duplicates a Radix primitive shadcn would also cover, consolidate on the shadcn version rather than maintaining both patterns side by side.
+See Section 21 for how to keep the current shadcn CLI on Radix, since its default changed after this brief was originally written.
 15.3 Navigation & Routing
 Navigation must be fully seamless — every link resolves to a real, working route. No dead links, no placeholder href="#".
 All dashboard routes (/dashboard/*) and admin routes (/admin/*) must be protected by middleware.ts, redirecting unauthenticated users appropriately.
@@ -714,27 +754,7 @@ All image references must degrade gracefully: if the actual .png file is missing
 Add descriptively-named placeholders to /public/images/ wherever a section currently lacks a real asset — including the ones already flagged as referenced-but-missing in layout.tsx metadata (og-image.png, apple-touch-icon.png, site.webmanifest, images/favicon.ico) and the About-page-specific assets above (about-hero.png, trustscore-diagram.png).
 Logo and favicon are fixed: use logo.png as the site logo everywhere, and favicon.ico as the browser tab icon — do not substitute alternate filenames for these two.
 
-16. Investor Access Request Flow — Two Versions in Source (Flag)
-Note added for navigability, no content altered: the original source material contains two different descriptions of the investor access flow, likely reflecting the design evolving mid-document. Both are preserved in full below, in the order they appeared. These two versions contradict each other (approval-gated vs. no-approval/auto-save) and should be reconciled with whoever owns the spec before implementation — this brief does not resolve the conflict on its own authority.
-16.1 Version A — Approval-Gated Flow (appears first in source)
-This is a new flow to implement, replacing any placeholder "Request Access" behavior:
-On a startup's profile page, investors see a "View More" button/link where gated or NDA-tier data would otherwise be shown.
-Clicking it triggers an access request: the request is logged in the access_requests table (timestamped, per the existing audit trail design), and a notification email is sent to the founder.
-The email is sent from trustscore.llm@gmail.com via the existing lib/email/send.ts + app/api/send-email/route.ts pipeline. It should include the investor's name, firm/company, and role (per their profile data), and a link/action for the founder to approve or reject.
-On founder approval: a follow-up message is sent connecting the two parties — this message should include the investor's relevant profile details (name, firm, role, LinkedIn if provided) so the founder has full context going into the conversation.
-On rejection: the investor should see their request status update (e.g., "Declined") without being given a reason unless the founder chooses to provide one.
-All approvals/rejections must be recorded in the audit trail (visible in the admin panel via LedgerAudit.tsx or equivalent), consistent with the existing compliance requirements.
-NDA data itself is never shown directly to investors — it is used only to compute the TrustScore. Only the founder's explicit approval-and-connect action can share investor-facing information, and even then, only what the founder is shown is what gets sent (i.e., no raw NDA fields leak into the connection message).
-16.2 Version B — Auto-Save, No-Approval Flow (appears later in source, under "Investor Side — Access Flow & Data Model")
-A modal/screen is shown (for appearances / product demo purposes).
-On the investor's action (e.g. clicking "Sign" / "Agree"), their data is auto-saved directly to Supabase — no approval step, no email required to complete the action, nothing waits on a founder's response.
-Their profile is then simply shown/unlocked — that's the entire flow.
-What this means practically (per source):
-No access_requests approval state machine (pending → approved/rejected) is needed. A row can just be inserted on submission.
-No blocking email-and-wait logic is required for the core function to work.
-A notification email to the founder (from trustscore.llm@gmail.com) can still be sent as a side-effect, fire-and-forget — informational only, not something the investor's flow waits on or depends on succeeding.
-No admin action is required anywhere in this flow.
-
+16. Investor Access Request Flow — Two Versions in Source (Flag) ✅ RESOLVED (Added): This contradiction has now been resolved for implementation. Version B (Auto-Save, No-Approval Flow) is the version to build. Decision made because no one will reliably be staffing the admin side to review and approve/reject requests, so a blocking approval step is not operationally realistic for this team. Version A is preserved below only for historical/reference purposes and should NOT be implemented. Any agent session should treat Version B as the authoritative flow going forward — do not re-ask which version to build. Note added for navigability, no content altered: the original source material contains two different descriptions of the investor access flow, likely reflecting the design evolving mid-document. Both are preserved in full below, in the order they appeared. These two versions contradict each other (approval-gated vs. no-approval/auto-save) — this contradiction is now resolved per the note above. 16.1 Version A — Approval-Gated Flow (appears first in source) This is a new flow to implement, replacing any placeholder "Request Access" behavior: On a startup's profile page, investors see a "View More" button/link where gated or NDA-tier data would otherwise be shown. Clicking it triggers an access request: the request is logged in the access_requests table (timestamped, per the existing audit trail design), and a notification email is sent to the founder. The email is sent from trustscore.llm@gmail.com via the existing lib/email/send.ts + app/api/send-email/route.ts pipeline. It should include the investor's name, firm/company, and role (per their profile data), and a link/action for the founder to approve or reject. On founder approval: a follow-up message is sent connecting the two parties — this message should include the investor's relevant profile details (name, firm, role, LinkedIn if provided) so the founder has full context going into the conversation. On rejection: the investor should see their request status update (e.g., "Declined") without being given a reason unless the founder chooses to provide one. All approvals/rejections must be recorded in the audit trail (visible in the admin panel via LedgerAudit.tsx or equivalent), consistent with the existing compliance requirements. NDA data itself is never shown directly to investors — it is used only to compute the TrustScore. Only the founder's explicit approval-and-connect action can share investor-facing information, and even then, only what the founder is shown is what gets sent (i.e., no raw NDA fields leak into the connection message). 16.2 Version B — Auto-Save, No-Approval Flow (appears later in source, under "Investor Side — Access Flow & Data Model") A modal/screen is shown (for appearances / product demo purposes). On the investor's action (e.g. clicking "Sign" / "Agree"), their data is auto-saved directly to Supabase — no approval step, no email required to complete the action, nothing waits on a founder's response. Their profile is then simply shown/unlocked — that's the entire flow. What this means practically (per source): No access_requests approval state machine (pending → approved/rejected) is needed. A row can just be inserted on submission. No blocking email-and-wait logic is required for the core function to work. A notification email to the founder (from trustscore.llm@gmail.com) can still be sent as a side-effect, fire-and-forget — informational only, not something the investor's flow waits on or depends on succeeding. No admin action is required anywhere in this flow.
 17. Investor Profile Data Model
 17.1 Profile Information (collected at sign-up & profile completion)
 Field
@@ -938,5 +958,17 @@ Important: because other viewers rely on the Realtime subscription (not on this 
 Google + Email Sign-In via Supabase.
 AuthProvider.tsx already has both implemented in code: signInWithGoogle(), signUpWithEmail(), signInWithEmail(). Supabase Auth genuinely does support both simultaneously out of the box — a user signs up with either method and lands in the same auth.users table, and the profiles table (linked via user_id) doesn't care which method they used.
 
-End of brief. This document consolidates the original TrustScore AI project description, architecture, hackathon write-up, database schema, color system, TrustScore algorithm, UI/UX rules, file map, final checklist, and agent-facing instructions into one navigable reference — with all original values, weights, and settings preserved unchanged.
+21. Component Library Clarification: Radix UI, Not Base UI (Added)
+> This entire section did not exist in the original source brief. It is added here to prevent a real, confirmed problem: the shadcn/ui CLI changed its default underlying component library after this brief was written, and following the CLI's new default would silently violate Section 12's requirement.
 
+Background: as of a mid-2026 shadcn/ui CLI update, running `npx shadcn init` now defaults to **Base UI** instead of **Radix UI**. Base UI is a separate, newer headless component library — not the same as Radix UI, even though shadcn presents both under one abstraction. Sections 12 and 15.2 of this brief explicitly require Radix UI (the project already depends on `@radix-ui/react-slot` and `@radix-ui/react-tooltip`), so the CLI's new default must be overridden.
+
+Rule for the agent: whenever initializing shadcn/ui or adding shadcn components in this project, explicitly force Radix UI. Do not accept "Base UI (Recommended)" if the CLI offers it as a default.
+- Init: `npx shadcn init -b radix` (or select Radix explicitly if prompted interactively).
+- Verify: `components.json` should show a `style` value starting with `radix-` (e.g. `radix-vega`), never `base-*`.
+- If a duplicate or misconfigured `components.json` is found showing `base-*`, stop and ask before reinitializing or reinstalling components — do not silently switch it yourself, since components already added under Base UI would need to be reinstalled, not just reconfigured.
+- The visual preset/style name (Vega, Nova, Maia, Lyra, Mira, Luma, Sera, Rhea, Custom) is independent of the Radix-vs-Base-UI choice and does not need to match any specific value — components get restyled to this project's exact color tokens (Section 10) regardless of starting preset.
+
+This section does not change the requirement itself — Section 12's "built on Radix UI + Tailwind" instruction was always the rule. This section exists only so the agent knows how to satisfy that rule given the CLI's current behavior, which differs from what existed when the original brief was written.
+
+End of brief. This document consolidates the original TrustScore AI project description, architecture, hackathon write-up, database schema, color system, TrustScore algorithm, UI/UX rules, file map, final checklist, and agent-facing instructions into one navigable reference — with all original values, weights, and settings preserved unchanged. Sections 8A and 21 are additive-only clarifications reflecting real setup steps taken and a real CLI behavior change encountered while standing up this project; they do not alter any original decision, weight, palette value, or architectural rule.

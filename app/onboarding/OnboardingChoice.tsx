@@ -12,10 +12,11 @@ export function OnboardingChoice() {
   function handleChoose(role: "founder" | "investor") {
     setSelecting(role);
     startTransition(async () => {
-      try {
-        await chooseRole(role);
-      } catch (err) {
-        toast.error("Couldn't save your choice", (err as Error).message);
+      const result = await chooseRole(role);
+      // If chooseRole succeeds it redirects server-side and never returns here.
+      // A returned value means it failed before redirecting.
+      if (result?.error) {
+        toast.error("Couldn't save your choice", result.error);
         setSelecting(null);
       }
     });

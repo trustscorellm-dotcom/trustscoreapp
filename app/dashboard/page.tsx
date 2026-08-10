@@ -26,7 +26,11 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const role = profile?.role ?? "founder";
+  // No profile yet = brand new signup that hasn't picked founder/investor.
+  // Send them to onboarding instead of silently defaulting to "founder".
+  if (!profile) redirect("/onboarding");
+
+  const role = profile.role ?? "founder";
 
   if (role === "admin") {
     return (
@@ -40,31 +44,14 @@ export default async function DashboardPage() {
   }
 
   if (role === "investor") {
-    let { data: investorProfile } = await supabase
+    const { data: investorProfile } = await supabase
       .from("investor_profiles")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!investorProfile) {
-      const { data: created } = await supabase
-        .from("investor_profiles")
-        .insert({ user_id: user.id, email: user.email ?? "" })
-        .select("*")
-        .single();
-      investorProfile = created;
-    }
-
-    if (!investorProfile) {
-      return (
-        <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-3 px-4 py-24 text-center sm:px-6">
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard unavailable</h1>
-          <p className="text-sm text-muted-foreground">
-            We couldn&apos;t load your investor profile. Please try again shortly.
-          </p>
-        </div>
-      );
-    }
+    // Profile role says "investor" but they haven't finished registration yet.
+    if (!investorProfile) redirect("/investor/register");
 
     const [{ data: portfolio }, { data: unlocks }] = await Promise.all([
       supabase.from("portfolio").select("*, company:companies(*)").eq("investor_id", user.id),
@@ -84,31 +71,14 @@ export default async function DashboardPage() {
     );
   }
 
-  let { data: company } = await supabase
+  const { data: company } = await supabase
     .from("companies")
     .select("*")
     .eq("owner_id", user.id)
     .maybeSingle();
 
-  if (!company) {
-    const { data: created } = await supabase
-      .from("companies")
-      .insert({ owner_id: user.id, name: "Untitled Startup" })
-      .select("*")
-      .single();
-    company = created;
-  }
-
-  if (!company) {
-    return (
-      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-3 px-4 py-24 text-center sm:px-6">
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard unavailable</h1>
-        <p className="text-sm text-muted-foreground">
-          We couldn&apos;t load your startup profile. Please try again shortly.
-        </p>
-      </div>
-    );
-  }
+  // Profile role says "founder" but they haven't finished registration yet.
+  if (!company) redirect("/register");
 
   const [{ data: gated }, { data: nda }] = await Promise.all([
     supabase.from("startup_gated_data").select("*").eq("startup_id", company.id).maybeSingle(),

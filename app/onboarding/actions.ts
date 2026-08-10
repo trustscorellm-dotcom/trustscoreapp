@@ -11,7 +11,6 @@ export async function chooseRole(role: "founder" | "investor") {
 
   if (!user) redirect("/auth");
 
-  // Upsert in case a profiles row already exists without a role set.
   const { error } = await supabase.from("profiles").upsert(
     {
       user_id: user.id,
@@ -22,9 +21,10 @@ export async function chooseRole(role: "founder" | "investor") {
   );
 
   if (error) {
-    // Surface the failure back to the client instead of silently redirecting
-    // into a broken state.
-    throw new Error(error.message);
+    // Return instead of throw — thrown Server Action errors get sanitized
+    // to a generic message in production builds. Returning lets the client
+    // show the real Postgres/RLS error message.
+    return { error: error.message };
   }
 
   redirect(role === "investor" ? "/investor/register" : "/register");

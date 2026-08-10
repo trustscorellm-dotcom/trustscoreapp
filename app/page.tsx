@@ -207,11 +207,12 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
               NDA-tier data stays confidential — always
             </h2>
-            <p className="mt-4 text-muted-foreground">
-              Confidential financials and IP details are used only to compute a startup&apos;s
-              score. They&apos;re never shown to investors directly, no matter how the score
-              is used downstream.
-            </p>
+          <p className="mt-4 text-muted-foreground leading-relaxed">
+            Your confidential financial and IP data is used solely to generate a startup's TrustScore.
+            <br />
+            This score is the only output shared , the underlying data remains private and is never 
+            exposed to any party, at any stage.
+          </p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 16 }}

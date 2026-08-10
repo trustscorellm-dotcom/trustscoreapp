@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { FiUser, FiMail, FiLock, FiBriefcase } from "react-icons/fi";
-import { FaGoogle } from "react-icons/fa6";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 import { FormField } from "@/components/FormField";
 import { toast } from "@/components/ui/toast";
 
 export default function InvestorRegisterPage() {
-  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, loading, signUpWithEmail } = useAuth();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [firmName, setFirmName] = useState("");
@@ -19,7 +18,46 @@ export default function InvestorRegisterPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(event: FormEvent) {
+  useEffect(() => {
+    const metaName = user?.user_metadata?.full_name as string | undefined;
+    if (metaName) setFullName((prev) => prev || metaName);
+  }, [user]);
+
+  // Case A: already-authenticated (Google sign-in via onboarding) — just needs firm details.
+  async function handleAuthenticatedSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!user) return;
+    setSubmitting(true);
+
+    const supabase = createClient();
+    const [{ error: profileError }, { error: investorError }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .upsert(
+          { user_id: user.id, role: "investor", full_name: fullName },
+          { onConflict: "user_id" }
+        ),
+      supabase
+        .from("investor_profiles")
+        .insert({ user_id: user.id, investor_name: fullName, firm_name: firmName }),
+    ]);
+
+    setSubmitting(false);
+
+    if (profileError || investorError) {
+      toast.error(
+        "Couldn't save your investor details",
+        investorError?.message || profileError?.message || "Please try again."
+      );
+      return;
+    }
+
+    toast.success("Investor profile created");
+    router.push("/dashboard");
+  }
+
+  // Case B: brand new visitor — full email/password signup.
+  async function handleSignupSubmit(event: FormEvent) {
     event.preventDefault();
     setSubmitting(true);
 
@@ -38,10 +76,10 @@ export default function InvestorRegisterPage() {
       const [{ error: profileError }, { error: investorError }] = await Promise.all([
         supabase
           .from("profiles")
-          .insert({ user_id: userId, role: "investor", full_name: fullName, email }),
+          .insert({ user_id: userId, role: "investor", full_name: fullName }),
         supabase
           .from("investor_profiles")
-          .insert({ user_id: userId, firm_name: firmName, full_name: fullName, email }),
+          .insert({ user_id: userId, investor_name: fullName, firm_name: firmName }),
       ]);
 
       if (profileError || investorError) {
@@ -57,6 +95,54 @@ export default function InvestorRegisterPage() {
     router.push("/dashboard");
   }
 
+  if (loading) {
+    return (
+      <div className="mx-auto flex w-full max-w-md flex-col items-center px-4 py-24 text-center">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="mx-auto flex w-full max-w-md flex-col px-4 py-16 sm:px-6 lg:py-24">
+        <h1 className="text-center text-3xl font-semibold text-foreground">
+          Tell us about your firm
+        </h1>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          One last step to start browsing verified startup profiles.
+        </p>
+
+        <form onSubmit={handleAuthenticatedSubmit} className="mt-8 flex flex-col gap-4">
+          <FormField
+            icon={FiUser}
+            label="Full name"
+            type="text"
+            value={fullName}
+            onChange={setFullName}
+            autoComplete="name"
+          />
+          <FormField
+            icon={FiBriefcase}
+            label="Company / firm name"
+            type="text"
+            value={firmName}
+            onChange={setFirmName}
+            autoComplete="organization"
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="mt-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {submitting ? "Saving..." : "Continue"}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-4 py-16 sm:px-6 lg:py-24">
       <h1 className="text-center text-3xl font-semibold text-foreground">
@@ -66,22 +152,7 @@ export default function InvestorRegisterPage() {
         Browse explainable TrustScore profiles instead of raw pitch decks.
       </p>
 
-      <button
-        type="button"
-        onClick={() => signInWithGoogle()}
-        className="mt-8 flex items-center justify-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-      >
-        <FaGoogle size={16} aria-hidden="true" />
-        Continue with Google
-      </button>
-
-      <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
-        <div className="h-px flex-1 bg-border" />
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSignupSubmit} className="mt-8 flex flex-col gap-4">
         <FormField
           icon={FiUser}
           label="Full name"

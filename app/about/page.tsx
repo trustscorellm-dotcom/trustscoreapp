@@ -44,7 +44,7 @@ const FEATURES = [
     icon: FiBarChart2,
     title: "Explainable scoring",
     description:
-      "See exactly which categories and evidence drive your score — never a black-box number.",
+      "See exactly which categories and progress data drive your score — never a black-box number.",
   },
   {
     icon: FiShield,
@@ -56,13 +56,13 @@ const FEATURES = [
     icon: FiLock,
     title: "Confidential by design",
     description:
-      "NDA-tier data is used only for scoring — never shown to investors, even after unlocking.",
+      "Blockchain based NDA-tier data is used only for scoring.",
   },
   {
     icon: FiRefreshCw,
     title: "Real-time sync",
     description:
-      "Edit your profile and see your TrustScore update immediately, backed by Supabase.",
+      "Edit your profile and see your TrustScore update immediately, backed by blockchain supported database .",
   },
   {
     icon: FiFileText,
@@ -74,7 +74,7 @@ const FEATURES = [
     icon: FiUsers,
     title: "Built for every founder",
     description:
-      "No elite network required — credibility built on the strength of your evidence.",
+      "No elite network required — credibility built on the strength of your progress data.",
   },
 ];
 

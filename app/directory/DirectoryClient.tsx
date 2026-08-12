@@ -23,16 +23,20 @@ export function DirectoryClient({ companies }: DirectoryClientProps) {
   ).sort();
 
   const matches = useCallback(
-    (company: Company, query: string, sectorFilter: string) => {
+    (company: Company, query: string, sectorFilter: string): boolean => {
       const matchesQuery =
         !query || company.name.toLowerCase().includes(query.toLowerCase());
-      const matchesSector =
+
+      const matchesSector: boolean =
         !sectorFilter ||
-        (company.sector &&
-          company.sector
-            .split(",")
-            .map((s) => s.trim())
-            .includes(sectorFilter));
+        Boolean(
+          company.sector &&
+            company.sector
+              .split(",")
+              .map((s) => s.trim())
+              .includes(sectorFilter)
+        );
+
       return matchesQuery && matchesSector;
     },
     []

@@ -14,14 +14,25 @@ interface DirectoryClientProps {
 
 export function DirectoryClient({ companies }: DirectoryClientProps) {
   const sectors = Array.from(
-    new Set(companies.map((company) => company.sector).filter((s): s is string => Boolean(s)))
+    new Set(
+      companies
+        .flatMap((company) => (company.sector ? company.sector.split(",") : []))
+        .map((s) => s.trim())
+        .filter((s): s is string => Boolean(s))
+    )
   ).sort();
 
   const matches = useCallback(
     (company: Company, query: string, sectorFilter: string) => {
       const matchesQuery =
         !query || company.name.toLowerCase().includes(query.toLowerCase());
-      const matchesSector = !sectorFilter || company.sector === sectorFilter;
+      const matchesSector =
+        !sectorFilter ||
+        (company.sector &&
+          company.sector
+            .split(",")
+            .map((s) => s.trim())
+            .includes(sectorFilter));
       return matchesQuery && matchesSector;
     },
     []
@@ -38,7 +49,6 @@ export function DirectoryClient({ companies }: DirectoryClientProps) {
         sectors={sectors}
         onSectorChange={setSector}
       />
-
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card py-16 text-center">
           <LazyImage

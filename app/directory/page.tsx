@@ -13,7 +13,8 @@ export default async function DirectoryPage() {
   const { data: companies, error } = await supabase
     .from("companies")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(0, 9999); // override Supabase's default 1,000-row cap
 
   if (error) {
     console.error("Failed to load directory:", error.message);
@@ -29,7 +30,6 @@ export default async function DirectoryPage() {
           Browse structured, explainable TrustScore profiles from founders on the platform.
         </p>
       </div>
-
       <div className="mt-12">
         <DirectoryClient companies={(companies as Company[] | null) ?? []} />
       </div>
